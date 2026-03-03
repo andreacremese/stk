@@ -1,106 +1,103 @@
 name: CI
 
 on:
-    push:
-        branches: [main]
-    pull_request:
-        branches: [main]
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-    test:
-        name: Test
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                go-version: ["1.25.x", "1.26.x"]
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ["1.24.x", "1.25.x"]
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-            - name: Set up Go
-              uses: actions/setup-go@v5
-              with:
-                  go-version: ${{ matrix.go-version }}
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
 
-            - name: Cache Go modules
-              uses: actions/cache@v4
-              with:
-                  path: |
-                      ~/.cache/go-build
-                      ~/go/pkg/mod
-                  key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
-                  restore-keys: |
-                      ${{ runner.os }}-go-${{ matrix.go-version }}-
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ matrix.go-version }}-
 
-            - name: Download dependencies
-              run: go mod download
+      - name: Download dependencies
+        run: go mod download
 
-            - name: Verify dependencies
-              run: go mod verify
+      - name: Verify dependencies
+        run: go mod verify
 
-            - name: Run tests
-              run: go test -v -race -coverprofile=coverage.out ./...
+      - name: Run tests
+        run: go test -v -race -coverprofile=coverage.out ./...
 
-            - name: Check test coverage
-              run: go tool cover -func=coverage.out
+      - name: Check test coverage
+        run: go tool cover -func=coverage.out
 
-            - name: Build
-              run: go build -v .
+      - name: Build
+        run: go build -v .
 
-    lint:
-        name: Lint
-        runs-on: ubuntu-latest
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            - name: Set up Go
-              uses: actions/setup-go@v5
-              with:
-                  go-version: "1.26.x"
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.x"
 
-            - name: Run golangci-lint
-              uses: golangci/golangci-lint-action@v6
-              with:
-                  version: latest
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=5m
 
-    security:
-        name: Security Scan
-        runs-on: ubuntu-latest
-        permissions:
-            contents: read
-            security-events: write
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            - name: Run Semgrep
-              uses: returntocorp/semgrep-action@v1
-              with:
-                  config: >-
-                      p/security-audit
-                      p/secrets
-                      p/ci
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.x"
 
-            - name: Run gosec
-              uses: securego/gosec@master
-              with:
-                  args: "-no-fail -fmt sarif -out gosec-results.sarif ./..."
+      - name: Run Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/secrets
+            p/ci
 
-            - name: Upload gosec results
-              if: always()
-              uses: github/codeql-action/upload-sarif@v4
-              with:
-                  sarif_file: gosec-results.sarif
+      - name: Run gosec
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          gosec -fmt=text ./...
 
-    # Note: pre-commit job removed to avoid redundancy
-    # Pre-commit hooks run locally for developers, and CI already runs:
-    # - Tests (test job)
-    # - Linting (lint job)
-    # - Security scans (security job)
-    # Running pre-commit in CI would duplicate these checks
+  # Note: pre-commit job removed to avoid redundancy
+  # Pre-commit hooks run locally for developers, and CI already runs:
+  # - Tests (test job)
+  # - Linting (lint job)
+  # - Security scans (security job)
+  # Running pre-commit in CI would duplicate these checks
