@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime/debug"
 	"strconv"
 	"time"
 
@@ -17,8 +18,14 @@ import (
 	"github.com/andreacremese/stk/internal/store"
 )
 
-// version is overridden at link time via -ldflags "-X main.version=<tag>".
-var version = "dev"
+func getVersion() string {
+	if info, ok := debug.ReadBuildInfo(); ok {
+		if info.Main.Version != "" && info.Main.Version != "(devel)" {
+			return info.Main.Version
+		}
+	}
+	return "dev"
+}
 
 const usage = `Usage: stk <command> [repo] [branch] [args]
 
@@ -51,7 +58,7 @@ func run(args []string) error {
 	}
 
 	if args[0] == "--version" || args[0] == "-v" {
-		fmt.Println(version)
+		fmt.Println(getVersion())
 		return nil
 	}
 
