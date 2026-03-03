@@ -61,7 +61,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.26.x"
+          go-version: "1.24.x"
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6
@@ -80,7 +80,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.26.x"
+          go-version: "1.24.x"
 
       - name: Run Semgrep
         uses: returntocorp/semgrep-action@v1
