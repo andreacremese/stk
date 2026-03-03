@@ -69,11 +69,11 @@ func Open(path string) (*Store, error) {
 		return nil, fmt.Errorf("opening db: %w", err)
 	}
 	if err := db.Ping(); err != nil {
-		db.Close()
+		_ = db.Close() // Best effort cleanup
 		return nil, fmt.Errorf("pinging db: %w", err)
 	}
 	if _, err := db.Exec(schema); err != nil {
-		db.Close()
+		_ = db.Close() // Best effort cleanup
 		return nil, fmt.Errorf("applying schema: %w", err)
 	}
 	return &Store{db: db}, nil

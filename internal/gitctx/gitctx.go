@@ -57,6 +57,7 @@ func Resolve(repo, branch string, lookup LookupFunc) (Ctx, error) {
 // DefaultLookup runs git with the supplied args and returns the trimmed
 // stdout. It maps a git exit-code 128 to ErrNotGitRepo.
 func DefaultLookup(args ...string) (string, error) {
+	// #nosec G204 -- This tool intentionally wraps git commands; args are not user-controlled in production use
 	out, err := exec.Command("git", args...).Output()
 	if err != nil {
 		var exitErr *exec.ExitError
