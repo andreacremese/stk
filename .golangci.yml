@@ -1,0 +1,26 @@
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    # Security
+    - gosec
+    # Default linters (explicit list for clarity)
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    # Additional useful linters
+    - gofmt
+    - goimports
+    - gocritic
+    - revive
+
+linters-settings:
+  gosec:
+    # Don't fail on medium/low severity issues
+    severity: high
+    confidence: medium
