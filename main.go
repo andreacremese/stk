@@ -8,6 +8,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"runtime/debug"
 	"strconv"
@@ -44,29 +45,33 @@ Flags:
 `
 
 func main() {
-	if err := run(os.Args[1:]); err != nil {
+	if err := run(os.Stdout, "", os.Args[1:]); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		os.Exit(1)
 	}
 }
 
 // run is the real entry-point, separated from main for testability.
-func run(args []string) error {
+// dbPath overrides the database location; pass "" to use the default.
+func run(out io.Writer, dbPath string, args []string) error {
 	if len(args) == 0 || args[0] == "-h" || args[0] == "--help" || args[0] == "help" {
 		fmt.Fprint(os.Stderr, usage)
 		return nil
 	}
 
 	if args[0] == "--version" || args[0] == "-v" {
-		fmt.Println(getVersion())
+		fmt.Fprintln(out, getVersion())
 		return nil
 	}
 
 	cmd, rest := args[0], args[1:]
 
-	dbPath, err := store.DefaultDBPath()
-	if err != nil {
-		return fmt.Errorf("resolving db path: %w", err)
+	if dbPath == "" {
+		var err error
+		dbPath, err = store.DefaultDBPath()
+		if err != nil {
+			return fmt.Errorf("resolving db path: %w", err)
+		}
 	}
 
 	db, err := store.Open(dbPath)
@@ -79,15 +84,15 @@ func run(args []string) error {
 
 	switch cmd {
 	case "push":
-		return runPush(st, rest)
+		return runPush(out, st, rest)
 	case "show":
-		return runShow(st, rest)
+		return runShow(out, st, rest)
 	case "pop":
-		return runPop(st, rest)
+		return runPop(out, st, rest)
 	case "clear":
-		return runClear(st, rest)
+		return runClear(out, st, rest)
 	case "pluck":
-		return runPluck(st, rest)
+		return runPluck(out, st, rest)
 	default:
 		return fmt.Errorf("unknown command %q\n\n%s", cmd, usage)
 	}
@@ -97,7 +102,7 @@ func run(args []string) error {
 
 // runPush handles: push [repo] [branch] "note"
 // The note is always the last argument.
-func runPush(st *stack.Stack, args []string) error {
+func runPush(out io.Writer, st *stack.Stack, args []string) error {
 	switch len(args) {
 	case 0:
 		return fmt.Errorf("push requires a note\n\nUsage: stk push [repo] [branch] \"note\"")
@@ -122,12 +127,12 @@ func runPush(st *stack.Stack, args []string) error {
 		return err
 	}
 
-	fmt.Printf("pushed  %s  %s\n", fmtTime(item.CreatedAt), item.Note)
+	fmt.Fprintf(out, "pushed  %s  %s\n", fmtTime(item.CreatedAt), item.Note)
 	return nil
 }
 
 // runShow handles: show [repo] [branch]
-func runShow(st *stack.Stack, args []string) error {
+func runShow(out io.Writer, st *stack.Stack, args []string) error {
 	if len(args) > 2 {
 		return fmt.Errorf("show: too many arguments\n\nUsage: stk show [repo] [branch]")
 	}
@@ -144,18 +149,18 @@ func runShow(st *stack.Stack, args []string) error {
 	}
 
 	if len(items) == 0 {
-		fmt.Println("(empty)")
+		fmt.Fprintln(out, "(empty)")
 		return nil
 	}
 
 	for i, it := range items {
-		fmt.Printf("%d  %s  %s\n", i, fmtTime(it.CreatedAt), it.Note)
+		fmt.Fprintf(out, "%d  %s  %s\n", i, fmtTime(it.CreatedAt), it.Note)
 	}
 	return nil
 }
 
 // runPop handles: pop [repo] [branch]
-func runPop(st *stack.Stack, args []string) error {
+func runPop(out io.Writer, st *stack.Stack, args []string) error {
 	if len(args) > 2 {
 		return fmt.Errorf("pop: too many arguments\n\nUsage: stk pop [repo] [branch]")
 	}
@@ -174,12 +179,12 @@ func runPop(st *stack.Stack, args []string) error {
 		return err
 	}
 
-	fmt.Printf("popped  %s  %s\n", fmtTime(item.CreatedAt), item.Note)
+	fmt.Fprintf(out, "popped  %s  %s\n", fmtTime(item.CreatedAt), item.Note)
 	return nil
 }
 
 // runClear handles: clear [repo] [branch]
-func runClear(st *stack.Stack, args []string) error {
+func runClear(out io.Writer, st *stack.Stack, args []string) error {
 	if len(args) > 2 {
 		return fmt.Errorf("clear: too many arguments\n\nUsage: stk clear [repo] [branch]")
 	}
@@ -194,13 +199,13 @@ func runClear(st *stack.Stack, args []string) error {
 		return err
 	}
 
-	fmt.Printf("cleared %s/%s\n", ctx.Repo, ctx.Branch)
+	fmt.Fprintf(out, "cleared %s/%s\n", ctx.Repo, ctx.Branch)
 	return nil
 }
 
 // runPluck handles: pluck [repo] [branch] <index>
 // The index is always the last argument.
-func runPluck(st *stack.Stack, args []string) error {
+func runPluck(out io.Writer, st *stack.Stack, args []string) error {
 	switch len(args) {
 	case 0:
 		return fmt.Errorf("pluck requires an index\n\nUsage: stk pluck [repo] [branch] <index>")
@@ -229,7 +234,7 @@ func runPluck(st *stack.Stack, args []string) error {
 		return err
 	}
 
-	fmt.Printf("plucked %s  %s\n", fmtTime(item.CreatedAt), item.Note)
+	fmt.Fprintf(out, "plucked %s  %s\n", fmtTime(item.CreatedAt), item.Note)
 	return nil
 }
 
