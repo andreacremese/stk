@@ -34,7 +34,7 @@ jobs:
 
         steps:
             - name: Checkout (full history for tag discovery)
-              uses: actions/checkout@v4
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
               with:
                   fetch-depth: 0
 
@@ -87,7 +87,7 @@ jobs:
                   git push origin "${{ steps.version.outputs.next }}"
 
             - name: Create GitHub Release
-              uses: softprops/action-gh-release@v2
+              uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2
               with:
                   tag_name: ${{ steps.version.outputs.next }}
                   generate_release_notes: true # uses PR titles + commit messages

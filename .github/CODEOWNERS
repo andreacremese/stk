@@ -1,0 +1,4 @@
+# Any PR touching workflow files requires owner approval.
+# This prevents a collaborator from silently modifying CI/CD pipelines
+# (Poisoned Pipeline Execution defence).
+.github/ @andreacremese
