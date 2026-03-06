@@ -122,7 +122,7 @@ func runPush(st *stack.Stack, args []string) error {
 		return err
 	}
 
-	fmt.Printf("pushed  %s  %s  %s\n", item.ID, fmtTime(item.CreatedAt), item.Note)
+	fmt.Printf("pushed  %s  %s\n", fmtTime(item.CreatedAt), item.Note)
 	return nil
 }
 
@@ -149,7 +149,7 @@ func runShow(st *stack.Stack, args []string) error {
 	}
 
 	for i, it := range items {
-		fmt.Printf("%d  %s  %s  %s\n", i, it.ID, fmtTime(it.CreatedAt), it.Note)
+		fmt.Printf("%d  %s  %s\n", i, fmtTime(it.CreatedAt), it.Note)
 	}
 	return nil
 }
@@ -174,7 +174,7 @@ func runPop(st *stack.Stack, args []string) error {
 		return err
 	}
 
-	fmt.Printf("popped  %s  %s  %s\n", item.ID, fmtTime(item.CreatedAt), item.Note)
+	fmt.Printf("popped  %s  %s\n", fmtTime(item.CreatedAt), item.Note)
 	return nil
 }
 
@@ -229,7 +229,7 @@ func runPluck(st *stack.Stack, args []string) error {
 		return err
 	}
 
-	fmt.Printf("plucked %s  %s  %s\n", item.ID, fmtTime(item.CreatedAt), item.Note)
+	fmt.Printf("plucked %s  %s\n", fmtTime(item.CreatedAt), item.Note)
 	return nil
 }
 
