@@ -1,0 +1,94 @@
+name: Release
+
+# Every release is intentional — triggered manually after merging to main.
+# This prevents a merge carrying breaking changes from being silently
+# tagged as a patch, which would violate semver for consumers pinned to 0.x.
+#
+# Process: merge PR → Actions → Release → Run workflow → choose bump type.
+#
+# Version logic:
+#   - Finds the latest semver tag (vMAJOR.MINOR.PATCH), ignoring pre-release
+#     suffixes (e.g. v0.1.0-alpha.1 → base v0.1.0).
+#   - Bumps the chosen component; minor/major resets lower components to 0.
+#   - Falls back to v0.0.0 when no stable tag exists yet.
+
+on:
+    workflow_dispatch:
+        inputs:
+            bump_type:
+                description: "Version bump type"
+                required: true
+                default: patch
+                type: choice
+                options:
+                    - patch
+                    - minor
+                    - major
+
+jobs:
+    release:
+        name: Tag and Release
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write # needed to push tags and create releases
+
+        steps:
+            - name: Checkout (full history for tag discovery)
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Compute next version
+              id: version
+              env:
+                  BUMP_TYPE: ${{ inputs.bump_type }}
+              run: |
+                  # Find the latest strict-semver tag; ignore pre-release suffixes.
+                  LATEST=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' \
+                           --sort=-version:refname | head -1)
+
+                  if [ -z "$LATEST" ]; then
+                    BASE="v0.0.0"
+                  else
+                    # Strip anything after the first hyphen (pre-release identifier).
+                    BASE=$(echo "$LATEST" | sed 's/-.*//')
+                  fi
+
+                  MAJOR=$(echo "$BASE" | cut -d. -f1 | tr -d 'v')
+                  MINOR=$(echo "$BASE" | cut -d. -f2)
+                  PATCH=$(echo "$BASE" | cut -d. -f3)
+
+                  BUMP="$BUMP_TYPE"
+
+                  case "$BUMP" in
+                    major)
+                      MAJOR=$((MAJOR + 1))
+                      MINOR=0
+                      PATCH=0
+                      ;;
+                    minor)
+                      MINOR=$((MINOR + 1))
+                      PATCH=0
+                      ;;
+                    patch)
+                      PATCH=$((PATCH + 1))
+                      ;;
+                  esac
+
+                  NEXT="v${MAJOR}.${MINOR}.${PATCH}"
+                  echo "next=$NEXT" >> "$GITHUB_OUTPUT"
+                  echo "Bumping $BUMP: ${LATEST:-none} → $NEXT"
+
+            - name: Create and push tag
+              run: |
+                  git config user.name  "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git tag "${{ steps.version.outputs.next }}"
+                  git push origin "${{ steps.version.outputs.next }}"
+
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: ${{ steps.version.outputs.next }}
+                  generate_release_notes: true # uses PR titles + commit messages
+                  make_latest: true
