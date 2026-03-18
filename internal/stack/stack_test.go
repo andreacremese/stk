@@ -120,9 +120,12 @@ func TestShow(t *testing.T) {
 	t.Run("returns items in insertion order", func(t *testing.T) {
 		t.Parallel()
 		svc, _ := newService()
-		svc.Push("repo", "main", "first")  //nolint:errcheck
-		svc.Push("repo", "main", "second") //nolint:errcheck
-		svc.Push("repo", "main", "third")  //nolint:errcheck
+		_, err := svc.Push("repo", "main", "first")
+		require.NoError(t, err)
+		_, err = svc.Push("repo", "main", "second")
+		require.NoError(t, err)
+		_, err = svc.Push("repo", "main", "third")
+		require.NoError(t, err)
 		items, err := svc.Show("repo", "main")
 		require.NoError(t, err)
 		require.Len(t, items, 3)
@@ -142,9 +145,12 @@ func TestShow(t *testing.T) {
 	t.Run("isolated by repo and branch", func(t *testing.T) {
 		t.Parallel()
 		svc, _ := newService()
-		svc.Push("repo", "main", "on main")    //nolint:errcheck
-		svc.Push("repo", "feature", "on feat") //nolint:errcheck
-		items, _ := svc.Show("repo", "main")
+		_, err := svc.Push("repo", "main", "on main")
+		require.NoError(t, err)
+		_, err = svc.Push("repo", "feature", "on feat")
+		require.NoError(t, err)
+		items, err := svc.Show("repo", "main")
+		require.NoError(t, err)
 		require.Len(t, items, 1)
 		assert.Equal(t, "on main", items[0].Note)
 	})
@@ -156,12 +162,15 @@ func TestPop(t *testing.T) {
 	t.Run("removes and returns oldest item", func(t *testing.T) {
 		t.Parallel()
 		svc, _ := newService()
-		svc.Push("repo", "main", "first")  //nolint:errcheck
-		svc.Push("repo", "main", "second") //nolint:errcheck
+		_, err := svc.Push("repo", "main", "first")
+		require.NoError(t, err)
+		_, err = svc.Push("repo", "main", "second")
+		require.NoError(t, err)
 		item, err := svc.Pop("repo", "main")
 		require.NoError(t, err)
 		assert.Equal(t, "first", item.Note)
-		remaining, _ := svc.Show("repo", "main")
+		remaining, err := svc.Show("repo", "main")
+		require.NoError(t, err)
 		assert.Len(t, remaining, 1)
 	})
 
@@ -179,20 +188,26 @@ func TestClear(t *testing.T) {
 	t.Run("removes all items", func(t *testing.T) {
 		t.Parallel()
 		svc, _ := newService()
-		svc.Push("repo", "main", "a") //nolint:errcheck
-		svc.Push("repo", "main", "b") //nolint:errcheck
+		_, err := svc.Push("repo", "main", "a")
+		require.NoError(t, err)
+		_, err = svc.Push("repo", "main", "b")
+		require.NoError(t, err)
 		require.NoError(t, svc.Clear("repo", "main"))
-		items, _ := svc.Show("repo", "main")
+		items, err := svc.Show("repo", "main")
+		require.NoError(t, err)
 		assert.Empty(t, items)
 	})
 
 	t.Run("does not affect other stacks", func(t *testing.T) {
 		t.Parallel()
 		svc, _ := newService()
-		svc.Push("repo", "main", "keep me") //nolint:errcheck
-		svc.Push("repo", "feat", "remove")  //nolint:errcheck
-		svc.Clear("repo", "feat")           //nolint:errcheck
-		items, _ := svc.Show("repo", "main")
+		_, err := svc.Push("repo", "main", "keep me")
+		require.NoError(t, err)
+		_, err = svc.Push("repo", "feat", "remove")
+		require.NoError(t, err)
+		require.NoError(t, svc.Clear("repo", "feat"))
+		items, err := svc.Show("repo", "main")
+		require.NoError(t, err)
 		assert.Len(t, items, 1)
 	})
 }
@@ -203,13 +218,17 @@ func TestPluck(t *testing.T) {
 	t.Run("removes item at given index", func(t *testing.T) {
 		t.Parallel()
 		svc, _ := newService()
-		svc.Push("repo", "main", "zero") //nolint:errcheck
-		svc.Push("repo", "main", "one")  //nolint:errcheck
-		svc.Push("repo", "main", "two")  //nolint:errcheck
+		_, err := svc.Push("repo", "main", "zero")
+		require.NoError(t, err)
+		_, err = svc.Push("repo", "main", "one")
+		require.NoError(t, err)
+		_, err = svc.Push("repo", "main", "two")
+		require.NoError(t, err)
 		item, err := svc.Pluck("repo", "main", 1)
 		require.NoError(t, err)
 		assert.Equal(t, "one", item.Note)
-		remaining, _ := svc.Show("repo", "main")
+		remaining, err := svc.Show("repo", "main")
+		require.NoError(t, err)
 		require.Len(t, remaining, 2)
 		assert.Equal(t, "zero", remaining[0].Note)
 		assert.Equal(t, "two", remaining[1].Note)
@@ -218,16 +237,18 @@ func TestPluck(t *testing.T) {
 	t.Run("negative index returns ErrIndexOutOfRange", func(t *testing.T) {
 		t.Parallel()
 		svc, _ := newService()
-		svc.Push("repo", "main", "note") //nolint:errcheck
-		_, err := svc.Pluck("repo", "main", -1)
+		_, err := svc.Push("repo", "main", "note")
+		require.NoError(t, err)
+		_, err = svc.Pluck("repo", "main", -1)
 		assert.ErrorIs(t, err, stack.ErrIndexOutOfRange)
 	})
 
 	t.Run("out of range index returns ErrIndexOutOfRange", func(t *testing.T) {
 		t.Parallel()
 		svc, _ := newService()
-		svc.Push("repo", "main", "only item") //nolint:errcheck
-		_, err := svc.Pluck("repo", "main", 5)
+		_, err := svc.Push("repo", "main", "only item")
+		require.NoError(t, err)
+		_, err = svc.Pluck("repo", "main", 5)
 		assert.ErrorIs(t, err, stack.ErrIndexOutOfRange)
 	})
 

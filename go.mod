@@ -1,6 +1,8 @@
 module github.com/andreacremese/stk
 
-go 1.24.0
+go 1.26
+
+toolchain go1.26.1
 
 require (
 	github.com/stretchr/testify v1.11.1
