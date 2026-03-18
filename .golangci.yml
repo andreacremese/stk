@@ -17,14 +17,13 @@ linters:
     # Additional useful linters
     - gocritic
     - revive
+  settings:
+    gosec:
+      # Don't fail on medium/low severity issues
+      severity: high
+      confidence: medium
 
 formatters:
   enable:
     - gofmt
     - goimports
-
-linters-settings:
-  gosec:
-    # Don't fail on medium/low severity issues
-    severity: high
-    confidence: medium
