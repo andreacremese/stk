@@ -1,8 +1,7 @@
-package gitctx
-
 // Package gitctx resolves the git repository name and current branch for the
 // working directory. Resolution is done via a pluggable LookupFunc so that
 // callers can inject stubs in tests instead of executing real git commands.
+package gitctx
 
 import (
 	"errors"

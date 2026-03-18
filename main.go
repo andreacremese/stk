@@ -1,9 +1,8 @@
-package main
-
-// Command stk is a local CLI for managing short follow-up notes keyed
+// Package main provides the stk CLI for managing short follow-up notes keyed
 // by git repo+branch. It provides five subcommands: push, show, pop, clear,
 // and pluck. Repo and branch arguments are optional; omitting them (or passing
 // "_") resolves the values from the current git working directory.
+package main
 
 import (
 	"errors"
@@ -46,7 +45,7 @@ Flags:
 
 func main() {
 	if err := run(os.Stdout, "", os.Args[1:]); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		os.Exit(1)
 	}
 }
@@ -55,12 +54,16 @@ func main() {
 // dbPath overrides the database location; pass "" to use the default.
 func run(out io.Writer, dbPath string, args []string) error {
 	if len(args) == 0 || args[0] == "-h" || args[0] == "--help" || args[0] == "help" {
-		fmt.Fprint(os.Stderr, usage)
+		if _, err := fmt.Fprint(os.Stderr, usage); err != nil {
+			return err
+		}
 		return nil
 	}
 
 	if args[0] == "--version" || args[0] == "-v" {
-		fmt.Fprintln(out, getVersion())
+		if _, err := fmt.Fprintln(out, getVersion()); err != nil {
+			return err
+		}
 		return nil
 	}
 
@@ -78,7 +81,7 @@ func run(out io.Writer, dbPath string, args []string) error {
 	if err != nil {
 		return fmt.Errorf("opening store: %w", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	st := stack.New(db)
 
@@ -127,7 +130,9 @@ func runPush(out io.Writer, st *stack.Stack, args []string) error {
 		return err
 	}
 
-	fmt.Fprintf(out, "pushed  %s  %s\n", fmtTime(item.CreatedAt), item.Note)
+	if _, err := fmt.Fprintf(out, "pushed  %s  %s\n", fmtTime(item.CreatedAt), item.Note); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -149,12 +154,16 @@ func runShow(out io.Writer, st *stack.Stack, args []string) error {
 	}
 
 	if len(items) == 0 {
-		fmt.Fprintln(out, "(empty)")
+		if _, err := fmt.Fprintln(out, "(empty)"); err != nil {
+			return err
+		}
 		return nil
 	}
 
 	for i, it := range items {
-		fmt.Fprintf(out, "%d  %s  %s\n", i, fmtTime(it.CreatedAt), it.Note)
+		if _, err := fmt.Fprintf(out, "%d  %s  %s\n", i, fmtTime(it.CreatedAt), it.Note); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -179,7 +188,9 @@ func runPop(out io.Writer, st *stack.Stack, args []string) error {
 		return err
 	}
 
-	fmt.Fprintf(out, "popped  %s  %s\n", fmtTime(item.CreatedAt), item.Note)
+	if _, err := fmt.Fprintf(out, "popped  %s  %s\n", fmtTime(item.CreatedAt), item.Note); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -199,7 +210,9 @@ func runClear(out io.Writer, st *stack.Stack, args []string) error {
 		return err
 	}
 
-	fmt.Fprintf(out, "cleared %s/%s\n", ctx.Repo, ctx.Branch)
+	if _, err := fmt.Fprintf(out, "cleared %s/%s\n", ctx.Repo, ctx.Branch); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -234,7 +247,9 @@ func runPluck(out io.Writer, st *stack.Stack, args []string) error {
 		return err
 	}
 
-	fmt.Fprintf(out, "plucked %s  %s\n", fmtTime(item.CreatedAt), item.Note)
+	if _, err := fmt.Fprintf(out, "plucked %s  %s\n", fmtTime(item.CreatedAt), item.Note); err != nil {
+		return err
+	}
 	return nil
 }
 

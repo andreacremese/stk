@@ -17,7 +17,7 @@ func newStore(t *testing.T) *store.Store {
 	t.Helper()
 	s, err := store.Open(filepath.Join(t.TempDir(), "test.db"))
 	require.NoError(t, err, "opening store")
-	t.Cleanup(func() { s.Close() })
+	t.Cleanup(func() { assert.NoError(t, s.Close()) })
 	return s
 }
 
@@ -40,7 +40,7 @@ func TestOpen(t *testing.T) {
 		path := filepath.Join(t.TempDir(), "a", "b", "c", "test.db")
 		s, err := store.Open(path)
 		require.NoError(t, err)
-		s.Close()
+		require.NoError(t, s.Close())
 	})
 
 	t.Run("is idempotent on repeated opens", func(t *testing.T) {
@@ -48,10 +48,10 @@ func TestOpen(t *testing.T) {
 		path := filepath.Join(t.TempDir(), "test.db")
 		s1, err := store.Open(path)
 		require.NoError(t, err)
-		s1.Close()
+		require.NoError(t, s1.Close())
 		s2, err := store.Open(path)
 		require.NoError(t, err)
-		s2.Close()
+		require.NoError(t, s2.Close())
 	})
 }
 

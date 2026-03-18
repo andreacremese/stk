@@ -1,8 +1,7 @@
-package store
-
 // Package store provides a SQLite-backed implementation of the stack.Storer
 // interface. No interface is defined here; per Go convention the interface
 // lives at the point of use (internal/stack).
+package store
 
 import (
 	"database/sql"
@@ -113,7 +112,7 @@ func (s *Store) List(repo, branch string) ([]stack.Item, error) {
 	if err != nil {
 		return nil, fmt.Errorf("list query: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var items []stack.Item
 	for rows.Next() {
