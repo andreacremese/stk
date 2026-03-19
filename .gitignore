@@ -37,3 +37,6 @@ stack-tool
 stack_tool
 
 .vscode/
+
+# Local build/module caches created by Makefile targets
+.cache/
