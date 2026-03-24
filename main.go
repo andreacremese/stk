@@ -133,7 +133,7 @@ func runPush(out io.Writer, st *stack.Stack, args []string) error {
 	if _, err := fmt.Fprintf(out, "pushed  %s  %s\n", fmtTime(item.CreatedAt), item.Note); err != nil {
 		return err
 	}
-	return nil
+	return showAfterMutation(out, st, ctx.Repo, ctx.Branch)
 }
 
 // runShow handles: show [repo] [branch]
@@ -148,7 +148,12 @@ func runShow(out io.Writer, st *stack.Stack, args []string) error {
 		return err
 	}
 
-	items, err := st.Show(ctx.Repo, ctx.Branch)
+	return printStack(out, st, ctx.Repo, ctx.Branch)
+}
+
+// printStack writes the current stack items for repo/branch to out.
+func printStack(out io.Writer, st *stack.Stack, repo, branch string) error {
+	items, err := st.Show(repo, branch)
 	if err != nil {
 		return err
 	}
@@ -166,6 +171,14 @@ func runShow(out io.Writer, st *stack.Stack, args []string) error {
 		}
 	}
 	return nil
+}
+
+// showAfterMutation prints the updated stack with a header after a mutation command.
+func showAfterMutation(out io.Writer, st *stack.Stack, repo, branch string) error {
+	if _, err := fmt.Fprintf(out, "\nThe stk for %s/%s is now\n", repo, branch); err != nil {
+		return err
+	}
+	return printStack(out, st, repo, branch)
 }
 
 // runPop handles: pop [repo] [branch]
@@ -191,7 +204,7 @@ func runPop(out io.Writer, st *stack.Stack, args []string) error {
 	if _, err := fmt.Fprintf(out, "popped  %s  %s\n", fmtTime(item.CreatedAt), item.Note); err != nil {
 		return err
 	}
-	return nil
+	return showAfterMutation(out, st, ctx.Repo, ctx.Branch)
 }
 
 // runClear handles: clear [repo] [branch]
@@ -250,7 +263,7 @@ func runPluck(out io.Writer, st *stack.Stack, args []string) error {
 	if _, err := fmt.Fprintf(out, "plucked %s  %s\n", fmtTime(item.CreatedAt), item.Note); err != nil {
 		return err
 	}
-	return nil
+	return showAfterMutation(out, st, ctx.Repo, ctx.Branch)
 }
 
 // ---- helpers ---------------------------------------------------------------
