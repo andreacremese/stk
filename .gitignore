@@ -37,3 +37,10 @@ stack-tool
 stack_tool
 
 .vscode/
+.devcontainer/
+.github/dependabot.yml
+
+
+# Local build/module caches created by Makefile targets
+.cache/
+.claude/
