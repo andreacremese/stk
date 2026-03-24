@@ -1,21 +1,13 @@
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 LDFLAGS := -ldflags "-X main.version=$(VERSION)"
 
-# Use repo-local Go caches to avoid permission issues in locked-down containers.
-GO_CACHE_DIR ?= $(CURDIR)/.cache/go-build
-GO_MOD_CACHE_DIR ?= $(CURDIR)/.cache/go-mod
-GO_PATH_DIR ?= $(CURDIR)/.cache/go-path
-GO_ENV := GOCACHE=$(GO_CACHE_DIR) GOMODCACHE=$(GO_MOD_CACHE_DIR) GOPATH=$(GO_PATH_DIR)
-
 .PHONY: build
 build: ## Build the binary with version injected from git tag
-	mkdir -p $(GO_CACHE_DIR) $(GO_MOD_CACHE_DIR) $(GO_PATH_DIR)
-	$(GO_ENV) go build $(LDFLAGS) -o stk .
+	go build $(LDFLAGS) -o stk .
 
 .PHONY: install
 install: ## Install the binary with version injected from git tag
-	mkdir -p $(GO_CACHE_DIR) $(GO_MOD_CACHE_DIR) $(GO_PATH_DIR)
-	$(GO_ENV) go install $(LDFLAGS) .
+	go install $(LDFLAGS) .
 
 # Install tools required by pre-commit hooks
 .PHONY: install-hooks-tools
