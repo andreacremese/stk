@@ -11,11 +11,11 @@ import (
 )
 
 // MaxNoteLen is the maximum allowed length for a note.
-const MaxNoteLen = 160
+const MaxNoteLen = 500
 
 // Sentinel errors returned by Stack methods.
 var (
-	ErrNoteTooLong     = errors.New("note exceeds 160 characters")
+	ErrNoteTooLong     = fmt.Errorf("note exceeds %d characters", MaxNoteLen)
 	ErrEmptyStack      = errors.New("stack is empty")
 	ErrIndexOutOfRange = errors.New("index out of range")
 )
