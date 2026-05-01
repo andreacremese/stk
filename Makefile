@@ -11,12 +11,11 @@ install: ## Install the binary with version injected from git tag
 
 # Install tools required by pre-commit hooks
 .PHONY: install-hooks-tools
-install-hooks-tools: ## Install pre-commit, semgrep, ggshield, and set up hooks if not present
-	if ! command -v pre-commit >/dev/null 2>&1; then \
-	  brew install pre-commit || echo "[WARNING] Could not install pre-commit with brew. Please install manually if needed."; \
-	else \
-	  echo "pre-commit already installed."; \
+install-hooks-tools: ## Install pre-commit (via uv), semgrep, ggshield, and set up hooks if not present
+	if ! command -v uv >/dev/null 2>&1; then \
+	  echo "[ERROR] uv is required to install pre-commit. Install it from https://docs.astral.sh/uv/"; exit 1; \
 	fi
+	uv tool install pre-commit --python python3.13
 	if ! command -v semgrep >/dev/null 2>&1; then \
 	  brew install semgrep || echo "[WARNING] Could not install semgrep with brew. Please install manually if needed."; \
 	else \
@@ -28,4 +27,4 @@ install-hooks-tools: ## Install pre-commit, semgrep, ggshield, and set up hooks 
 	  echo "ggshield already installed."; \
 	fi
 	pre-commit install
-	echo "pre-commit, semgrep, and ggshield installed (if needed). Pre-commit hooks installed."
+	echo "pre-commit (via uv/python3.13), semgrep, and ggshield installed. Pre-commit hooks installed."
